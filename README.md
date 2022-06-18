@@ -27,7 +27,7 @@ Before building the API endpoint, I decided to analyze the data and remove all r
 ## API Endpoint
 
 URI: `GET /api/v1/planes?page=1&model=string&weightClass=string&tag=string&tag=string`
-Below is the body schema accepted by the search endpoint. It accepts a string for modelId, weightClass and a list of strings representing the tags. All fields are optional and if given no fields and asked to search this endpoint will retrieve everything in the dataframe. This endpoint does support pagination as well. The default page is set to 1 if no page is given.
+Below is the body schema accepted by the search endpoint. It accepts a string for modelId, weightClass and a list of strings representing the tags. All fields are optional and if given no fields and asked to search this endpoint will retrieve everything in the dataframe. This endpoint does support pagination as well. The default page is set to 1 if no page is given. It will return a status code 200 OK if successful.
 
 #### Example Request
 
