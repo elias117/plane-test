@@ -1,12 +1,16 @@
 import os
 import pandas as pd
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, jsonify
 import numpy as np
 
+PLANES_PER_PAGE = 10
 df = pd.read_csv("./Aircraft Database - Sheet1.csv")
 df.dropna(how="all", inplace=True)
 cols = df.columns
 df[cols] = df[cols].replace({np.nan: "No Value"})
+df.columns = [col.replace('\n', '') for col in cols]
+df["Approach Speed (Vref)"] = df['Approach Speed (Vref)'].apply(
+    lambda x: str(x))
 
 
 def check_tag_match(tags_data, tags_user_input):
@@ -18,19 +22,22 @@ def check_tag_match(tags_data, tags_user_input):
 
 
 app = Flask(__name__)
-app.config.from_object("config")
 
 
-@app.route("/api/v1/search", methods=["POST"])
+@app.route("/api/v1/planes",
+           methods=["GET"])
 def get_planes_by_model():
-    data = request.get_json()
-    model_id = data.get("modelId", '')
-    weight_class = data.get("weightClass", '')
-    tags = data.get("tags", [])
+    page = request.args.get("page", 1, type=int)
+    start = (page - 1) * PLANES_PER_PAGE
+    end = start + PLANES_PER_PAGE
 
+    tags = request.args.getlist("tags")
+    model_id = request.args.get("model", "")
+    weight_class = request.args.get("weightClass", "")
     if model_id == '' and weight_class == '' and tags == []:
         return jsonify({
-            'planes': list(df.T.to_dict().values())
+            "page": page,
+            'planes': list(df.T.to_dict().values())[start:end]
         }), 200
     found_results = df[df['Model'].str.contains(model_id, case=False)]
     found_results = found_results[found_results["ATCT Weight Class"].str.contains(
@@ -41,7 +48,8 @@ def get_planes_by_model():
         found_results = found_results[found_results['Tag Match']]
     formatted_results = list(found_results.T.to_dict().values())
     return jsonify({
-        "planes": formatted_results
+        "page": page,
+        "planes": formatted_results[start:end]
     }), 200
 
 
